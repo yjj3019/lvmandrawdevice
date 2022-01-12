@@ -1,4 +1,7 @@
-lv00		/	504
-lv01		/	505
-lv02		/	506
-lv03		/	507
+vg00	/	lvol01	/	300
+vg00	/	lvol02	/	300
+vg01	/	lvol03	/	300
+vg00	/	lvol05	/	300
+vg00	/	lvol05	/	300
+vg05	/	lvol06	/	300
+
