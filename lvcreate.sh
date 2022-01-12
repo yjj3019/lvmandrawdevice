@@ -2,9 +2,9 @@
 #set -x
 ####################################################################################
 # work.txt example
-# VGNAME / LVNAME / Size
+# VGNAME/LVNAME/Size
 # ex)
-# vg01 / lvol01 / 300
+# vg01/lvol01/300
 ####################################################################################
 
 # Check Plase...
@@ -22,10 +22,46 @@ if [ ! -f $workfile ]; then
         exit;
 fi
 
+
+chk()
+{
+cat $workfile | sed 's/ //g' | sed 's/  //g'|sed 's/\t//g' | sed '/^$/d' > /tmp/rawtmp.txt
+cat /tmp/rawtmp.txt > $workfile
+echo ""
+echo ""
+
+cat $workfile | while read line
+do
+        if [ "$line" != "" ]
+        then
+                echo "$line"
+        else
+                echo "blank line Found..."
+                exit;
+        fi
+done
+echo ""
+echo ""
+
+chkif=$(grep " " $workfile |wc -l)
+if [ $chkif -ge 1 ]
+then
+        echo "Space Found..."
+        grep " " $workfile
+        exit;
+fi
+
+echo ""
+echo ""
+
+echo " Raw Data Converting and Check End... "
+
+}
+
 lvcreate()
 {
 echo "lvcreate Start..."
-cat $workfile |awk '{print "lvcreate -L "$5"M -n "$3" " $1}'  > $execfile
+cat $workfile |awk -F\/ '{print "lvcreate -L "$3"M -n "$2" " $1}'  > $execfile
 chmod +x $execfile
 echo "lvcreate Done..."
 }
@@ -38,7 +74,7 @@ touch $rulesfile
 
 echo "raw create Start..."
 
-while IFS=' / ' read -r -a array || [ -n "$array" ]
+while IFS='/' read -r -a array || [ -n "$array" ]
 do
         echo "ACTION==\"add|change\",ENV{DM_VG_NAME}==\"${array[0]}\",ENV{DM_LV_NAME}==\"${array[1]}\",RUN+=\"/bin/raw /dev/raw/raw$NUM %N\"" >>  $rulesfile
         echo "ACTION==\"add|change\",KERNEL==\"raw$NUM\",SYMLINK+=\"${array[0]}/${array[1]}\"" >> $rulesfile
@@ -50,9 +86,10 @@ echo "raw create Done..."
 }
 
 
-echo " 1) lvcreate workfile create"
-echo " 2) lvcreate workfile execute"
-echo " 3) raw device rules file create"
+echo " 1) Raw Data Converting..."
+echo " 2) lvcreate workfile create"
+echo " 3) lvcreate workfile execute"
+echo " 4) raw device rules file create"
 echo " q) Good Bye..."
 while :
 do
@@ -60,12 +97,17 @@ do
 
 case $INPUT_STRING in
         1)
+                echo " Raw Data Converting and Check... "
+                chk
+
+                ;;
+        2)
                 echo "lvcreate workfile create..."
                 lvcreate
                 ls -al $execfile
                 ;;
 
-        2)
+        3)
                 echo "lvcreate workfile execute..."
                 ### work file check
                 if [ ! -f $execfile ]; then
@@ -74,9 +116,11 @@ case $INPUT_STRING in
                 fi
 
                 sh -x $execfile
+                echo ""
+                echo "LVM Info..."
                 lvs
                 ;;
-        3)
+        4)
                 echo "raw device rules file create..."
                 rawcreate
                 ls -al $rulesfile
@@ -88,7 +132,7 @@ case $INPUT_STRING in
                 ;;
 
         *)
-                echo "choice number...[1/2/3/q]"
+                echo "choice number...[1/2/3//4/q]"
                 ;;
 
 esac
