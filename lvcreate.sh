@@ -40,7 +40,6 @@ echo "raw create Start..."
 
 while IFS=' / ' read -r -a array || [ -n "$array" ]
 do
-        echo "${array[0]} ${array[1]} ${array[2]}"
         echo "ACTION==\"add|change\",ENV{DM_VG_NAME}==\"${array[0]}\",ENV{DM_LV_NAME}==\"${array[1]}\",RUN+=\"/bin/raw /dev/raw/raw$NUM %N\"" >>  $rulesfile
         echo "ACTION==\"add|change\",KERNEL==\"raw$NUM\",SYMLINK+=\"${array[0]}/${array[1]}\"" >> $rulesfile
         ((NUM+=1))
